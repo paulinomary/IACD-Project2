@@ -1,31 +1,33 @@
-#Task 6 - Find the most popular superhero
-#Spark RDDs
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import explode, split, col
 
-from pyspark import SparkConf, SparkContext
-import collections
+# Create a Spark session
+spark = SparkSession.builder.appName("HeroAppearanceCount").getOrCreate()
 
-conf = SparkConf().setMaster("local").setAppName("MostPopularSuperhero")
-sc = SparkContext(conf = conf)
+# Read data into RDDs
+movies_rdd = spark.read.text("Marvel+Graph").rdd.flatMap(lambda x: x)
+names_rdd = spark.read.text("Marvel+Names").rdd.flatMap(lambda x: x)
 
-def parseNames(line):
-    fields = line.split('\"')
-    return (int(fields[0]), fields[1].encode("utf8"))
+# Process the movies RDD to count hero appearances
+movies_hero_count_rdd = movies_rdd \
+    .flatMap(lambda line: line.split(' ')) \
+    .filter(lambda hero_id: hero_id != '') \
+    .map(lambda hero_id: (hero_id, 1)) \
+    .reduceByKey(lambda x, y: x + y) \
+    .sortBy(lambda x: x[1], ascending=False)
 
-def countCoOccurences(line):
-    fields = line.split()
-    return (int(fields[0]), len(fields) - 1)
+# Process the names RDD to create a mapping of hero IDs to names
+names_mapping_rdd = names_rdd \
+    .map(lambda line: line.split(' ', 1)) \
+    .map(lambda parts: (parts[0], parts[1]))
 
-names = sc.textFile("./Marvel+Names")
-namesRdd = names.map(parseNames)
 
-lines = sc.textFile("./Marvel+Graph")
-pairings = lines.map(countCoOccurences)
-totalFriendsByCharacter = pairings.reduceByKey(lambda x, y : x + y)
-flipped = totalFriendsByCharacter.map(lambda xy : (xy[1], xy[0]))
+# Find the hero that appears the most
+most_appeared_hero_id = movies_hero_count_rdd.first()[0]
+most_appeared_hero_name = names_mapping_rdd.filter(lambda x: x[0] == most_appeared_hero_id).first()[1]
 
-mostPopular = flipped.max()
-mostPopularName = namesRdd.lookup(mostPopular[1])[0]
+# Print the result
+print(f"\n\nThe hero that appears the most is: {most_appeared_hero_name}\n\n")
 
-print(str(mostPopularName) + " is the most popular superhero, with " + \
-    str(mostPopular[0]) + " co-appearances.")
-
+# Stop the Spark session
+spark.stop()
