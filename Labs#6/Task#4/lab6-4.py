@@ -1,3 +1,5 @@
+# Task 4 - Get the Sorted Amount Spent by Customer
+
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 
@@ -18,7 +20,7 @@ class TotalAmountbyCustomer(MRJob):
         yield customerID, sum(amounts)
 
     def mapper_make_amount_key(self, customerID, totalAmount):
-        yield 'key', (totalAmount, customerID)
+        yield None, (totalAmount, customerID)
 
     def reducer_output_amount(self, _, customer_amounts):
         for totalAmount, customerID in sorted(customer_amounts, reverse=True):

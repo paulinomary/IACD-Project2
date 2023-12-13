@@ -1,6 +1,5 @@
 # Average Number of Friends by Age - Task #1
 # Hadoop MapReduce
-# Create a MapReduce program that will calculate the average number of friends by age of the csv file
 
 # Importing the libraries
 from mrjob.job import MRJob
@@ -12,16 +11,15 @@ class FriendsByAge(MRJob):
     def steps(self):
         return [
             MRStep(mapper=self.get_friends_mapper, reducer=self.count_friends_reducer),
-            MRStep(mapper=self.average_friends_mapper, reducer=self.output_reducer)
+            MRStep(reducer=self.output_reducer)
         ]
 
-    # Mapper 1 - Get the number of friends
+    # Get the number of friends
     def get_friends_mapper(self, _, line):
-        # Identify the needed fields and split the line
         _, _, age, num_friends = line.split(',')
         yield age, float(num_friends)
 
-    # Reducer 1 - Count the number of friends
+    # Count the number of friends
     def count_friends_reducer(self, age, num_friends):
         total, num_elements = 0, 0
         for x in num_friends:
@@ -31,11 +29,7 @@ class FriendsByAge(MRJob):
         average = total / num_elements
         yield age, average
 
-    # Mapper 2 - Pass through the data
-    def average_friends_mapper(self, age, average):
-        yield age, average
-
-    # Reducer 2 - Output the results
+    # Output the results
     def output_reducer(self, age, averages):
         for average in averages:
             yield age, average

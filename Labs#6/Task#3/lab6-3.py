@@ -1,3 +1,4 @@
+# Task 3 - Sort the word frequency in a book
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 import string
@@ -13,7 +14,6 @@ class MRWordFrequencySort(MRJob):
         ]
 
     def mapper_get_words(self, _, line):
-        # Remove punctuation from each line and split into words
         words = line.translate(str.maketrans('', '', string.punctuation)).split()
         for word in words:
             yield word.lower(), 1
@@ -22,12 +22,11 @@ class MRWordFrequencySort(MRJob):
         yield word, sum(counts)
 
     def mapper_sort_words(self, word, count):
-        # Swap key and value for sorting (count, word)
-        yield str(count).zfill(8), word
+        yield count, word
 
     def reducer_output_sorted_words(self, count, words):
         for word in words:
-            yield word, int(count)
+            yield count, word
 
 if __name__ == '__main__':
     MRWordFrequencySort.run()
