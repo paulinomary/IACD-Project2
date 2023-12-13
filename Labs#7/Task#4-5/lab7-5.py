@@ -17,7 +17,7 @@ lines = sc.textFile("./customer-orders.csv")
 rdd = lines.map(parseLine)
 
 totalAmountSpent = rdd.reduceByKey(lambda x, y: x + y)
-totalAmountSpentSorted = totalAmountSpent.map(lambda x: (x[1], x[0])).sortByKey()
+totalAmountSpentSorted = totalAmountSpent.map(lambda x: (x[1], x[0])).sortByKey(ascending=False)
 
 results = totalAmountSpentSorted.collect()
 
