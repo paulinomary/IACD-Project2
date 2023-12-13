@@ -19,6 +19,5 @@ heroNames = heroNames.withColumn("heroName", heroNames.heroInfo.getItem(1))
 
 mostPopular = heroCoOccurrences.join(heroNames, heroCoOccurrences.hero == heroNames.heroID)
 
-
 mostPopularSuperhero = mostPopular.select("heroName", "count").orderBy("count", ascending = False).limit(1)
 mostPopularSuperhero.show()
